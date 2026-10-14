@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  helpdesk-db:
+    image: postgres:16-alpine
+    container_name: helpdesk-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-helpdesk_db}
+      POSTGRES_USER: ${DB_USERNAME:-helpdesk_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-helpdesk_pass}
+    ports:
+      - "5433:5432"
+    volumes:
+      - helpdesk_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-helpdesk_user} -d ${DB_NAME:-helpdesk_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  helpdesk-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: helpdesk-app
+    restart: unless-stopped
+    depends_on:
+      helpdesk-db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://helpdesk-db:5432/${DB_NAME:-helpdesk_db}
+      DB_USERNAME: ${DB_USERNAME:-helpdesk_user}
+      DB_PASSWORD: ${DB_PASSWORD:-helpdesk_pass}
+      SERVER_PORT: 8081
+    ports:
+      - "8081:8081"
+    volumes:
+      - helpdesk_attachments:/app/uploads/attachments
+
+volumes:
+  helpdesk_pgdata:
+  helpdesk_attachments:

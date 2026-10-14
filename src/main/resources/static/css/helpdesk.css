@@ -1,0 +1,109 @@
+/* HelpDesk Pro Custom Design System */
+:root {
+    --hd-primary: #1e1b4b;
+    --hd-secondary: #312e81;
+    --hd-accent: #6366f1;
+    --hd-success: #10b981;
+    --hd-danger: #ef4444;
+    --hd-warning: #f59e0b;
+    --hd-info: #0ea5e9;
+    --hd-bg: #f8fafc;
+    --hd-border: #e2e8f0;
+}
+
+body {
+    background-color: var(--hd-bg);
+    color: #1e293b;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar-helpdesk {
+    background: linear-gradient(90deg, #1e1b4b 0%, #312e81 100%);
+    border-bottom: 2px solid var(--hd-accent);
+}
+
+.navbar-helpdesk .navbar-brand {
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+}
+
+.navbar-helpdesk .nav-link {
+    color: #cbd5e1;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.navbar-helpdesk .nav-link:hover,
+.navbar-helpdesk .nav-link.active {
+    color: #ffffff;
+}
+
+.stat-card {
+    background: #ffffff;
+    border: 1px solid var(--hd-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.badge-open { background-color: #e0e7ff; color: #3730a3; }
+.badge-assigned { background-color: #dbeafe; color: #1e40af; }
+.badge-in_progress { background-color: #fef3c7; color: #92400e; }
+.badge-resolved { background-color: #dcfce7; color: #166534; }
+.badge-closed { background-color: #f1f5f9; color: #475569; }
+
+.badge-urgent { background-color: #fee2e2; color: #991b1b; font-weight: 700; }
+.badge-high { background-color: #ffedd5; color: #9a3412; }
+.badge-medium { background-color: #fef9c3; color: #854d0e; }
+.badge-low { background-color: #f0fdf4; color: #166534; }
+
+.comment-bubble {
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.comment-public {
+    background-color: #ffffff;
+    border: 1px solid var(--hd-border);
+}
+
+.comment-internal {
+    background-color: #fffbeb;
+    border: 1px dashed #f59e0b;
+}
+
+.timeline-item {
+    border-left: 2px solid var(--hd-accent);
+    padding-left: 1rem;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--hd-accent);
+}
+
+.toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 1080;
+}

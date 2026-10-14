@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: html_head('Submit Support Ticket')}"></head>
+<body>
+
+<nav th:replace="~{fragments/header :: navbar}"></nav>
+
+<div class="container py-5" style="max-width: 750px;">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-pencil-square text-primary me-2"></i>Create Support Ticket</h2>
+            <p class="text-muted small mb-0">File a new inquiry with automated SLA response time commitment</p>
+        </div>
+        <a th:href="@{/tickets}" class="btn btn-outline-secondary btn-sm">&larr; Back to Tickets</a>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-x-circle-fill me-2"></i> <span th:text="${errorMessage}">Error</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 p-4">
+        <div class="card-body">
+            <form th:action="@{/tickets/create}" th:object="${createTicketDto}" method="post">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-secondary small">Ticket Subject / Title</label>
+                    <input type="text" class="form-control form-control-lg" th:field="*{title}" placeholder="Brief, descriptive summary of the problem" required>
+                    <div th:if="${#fields.hasErrors('title')}" th:errors="*{title}" class="text-danger small mt-1"></div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold text-secondary small">Category</label>
+                        <select class="form-select" th:field="*{category}" required>
+                            <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat}">TECHNICAL</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold text-secondary small">Priority (Determines SLA Deadline)</label>
+                        <select class="form-select" th:field="*{priority}" required>
+                            <option th:each="p : ${priorities}" th:value="${p}" th:text="${p}">MEDIUM</option>
+                        </select>
+                        <small class="text-muted">URGENT: 1h response | HIGH: 2h response | MEDIUM: 4h response</small>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold text-secondary small">Detailed Description & Steps to Reproduce</label>
+                    <textarea class="form-control" rows="6" th:field="*{description}" placeholder="Please include expected behavior, actual outcome, and any error codes..." required></textarea>
+                    <div th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="text-danger small mt-1"></div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-3 fs-5">
+                    <i class="bi bi-send-check-fill me-2"></i> Submit Ticket to Support Queue
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/header :: scripts}"></div>
+
+</body>
+</html>

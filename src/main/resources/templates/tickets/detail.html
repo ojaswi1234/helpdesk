@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: html_head(${ticket.ticketNumber} + ' - ' + ${ticket.title})}"></head>
+<body>
+
+<nav th:replace="~{fragments/header :: navbar}"></nav>
+
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="font-monospace fw-bold fs-5 text-primary" th:text="${ticket.ticketNumber}">HD-001</span>
+                <span id="ticket-status-badge" class="badge fs-6" th:classappend="${'badge-' + ticket.status.toLowerCase()}" th:text="${ticket.status}">OPEN</span>
+                <span class="badge" th:classappend="${'badge-' + ticket.priority.toLowerCase()}" th:text="${ticket.priority}">PRIORITY</span>
+            </div>
+            <h3 class="fw-bold mb-0 text-dark" th:text="${ticket.title}">Ticket Title</h3>
+        </div>
+        <div class="d-flex gap-2 mt-2 mt-sm-0">
+            <a th:href="@{/tickets}" class="btn btn-outline-secondary btn-sm">&larr; Back to Queue</a>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i> <span th:text="${successMessage}">Success</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-x-circle-fill me-2"></i> <span th:text="${errorMessage}">Error</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Conversation & Content Column -->
+        <div class="col-lg-8">
+            <!-- Original Description Card -->
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-secondary small">
+                        <i class="bi bi-person-circle me-1"></i> Submitted by <strong th:text="${ticket.customerFullName}">Customer</strong>
+                    </span>
+                    <span class="text-muted small" th:text="${#temporals.format(ticket.createdAt, 'dd-MMM-yyyy HH:mm')}">Date</span>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0 text-dark" style="white-space: pre-wrap;" th:text="${ticket.description}">Description text...</p>
+                </div>
+            </div>
+
+            <!-- Conversation Feed -->
+            <h5 class="fw-bold mb-3"><i class="bi bi-chat-left-dots-fill me-2 text-primary"></i>Conversation History</h5>
+
+            <div id="live-comment-indicator" class="alert alert-info d-none">
+                <i class="bi bi-info-circle me-1"></i> A new comment was just posted. Please refresh to view latest responses.
+            </div>
+
+            <div th:if="${#lists.isEmpty(comments)}" class="text-center py-4 text-muted card shadow-sm border-0 rounded-4 mb-4">
+                No replies or notes have been posted on this ticket yet.
+            </div>
+
+            <div th:each="c : ${comments}"
+                 class="comment-bubble"
+                 th:classappend="${c.internalNote} ? 'comment-internal' : 'comment-public'">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <strong th:text="${c.userFullName}">Author</strong>
+                        <span class="badge bg-secondary ms-1 small" th:text="${c.userRole}">ROLE</span>
+                        <span th:if="${c.internalNote}" class="badge bg-warning text-dark ms-1">
+                            <i class="bi bi-lock-fill"></i> Internal Staff Note
+                        </span>
+                    </div>
+                    <small class="text-muted" th:text="${#temporals.format(c.createdAt, 'dd-MMM HH:mm')}">Time</small>
+                </div>
+                <p class="mb-0 text-dark" style="white-space: pre-wrap;" th:text="${c.content}">Comment text...</p>
+            </div>
+
+            <!-- Post Reply Box -->
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Add Response</h6>
+                    <form th:action="@{'/tickets/' + ${ticket.id} + '/comments'}" th:object="${commentDto}" method="post">
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="4" th:field="*{content}" placeholder="Type your response here..." required></textarea>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div th:if="${isStaff}" class="form-check">
+                                <input class="form-check-input" type="checkbox" th:field="*{internalNote}" id="internalNoteCheck">
+                                <label class="form-check-label text-warning-emphasis fw-semibold small" for="internalNoteCheck">
+                                    <i class="bi bi-eye-slash-fill me-1"></i> Make this an internal note (Hidden from customer)
+                                </label>
+                            </div>
+                            <div th:unless="${isStaff}"></div>
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                                <i class="bi bi-send-fill me-1"></i> Post Response
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Attachments Section -->
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-paperclip me-1"></i>Attachments</h6>
+                </div>
+                <div class="card-body">
+                    <div th:if="${#lists.isEmpty(attachments)}" class="text-muted small mb-3">
+                        No attachments uploaded for this ticket.
+                    </div>
+                    <ul class="list-group list-group-flush mb-3" th:unless="${#lists.isEmpty(attachments)}">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0" th:each="att : ${attachments}">
+                            <div>
+                                <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                                <span class="fw-semibold" th:text="${att.originalFilename}">file.pdf</span>
+                                <small class="text-muted ms-2" th:text="'(' + ${#numbers.formatDecimal(att.fileSize / 1024, 1, 1)} + ' KB)'">0 KB</small>
+                            </div>
+                            <a th:href="@{'/attachments/' + ${att.id} + '/download'}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-download"></i> Download
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- Upload Form -->
+                    <form th:action="@{'/tickets/' + ${ticket.id} + '/attachments'}" method="post" enctype="multipart/form-data" class="d-flex gap-2">
+                        <input class="form-control form-control-sm" type="file" name="file" required>
+                        <button class="btn btn-sm btn-outline-secondary" type="submit">Upload</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Metadata & State Machine Column -->
+        <div class="col-lg-4">
+            <!-- Workflow Actions Card -->
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Workflow Actions</h6>
+                </div>
+                <div class="card-body">
+                    <!-- Status Transition Controls -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-secondary">Advance Ticket Status</label>
+                        <div class="d-flex flex-wrap gap-2" th:if="${!#lists.isEmpty(validNextStatuses)}">
+                            <form th:each="st : ${validNextStatuses}" th:action="@{'/tickets/' + ${ticket.id} + '/status'}" method="post">
+                                <input type="hidden" name="targetStatus" th:value="${st}">
+                                <button type="submit" class="btn btn-sm btn-outline-primary fw-semibold" th:text="'Move to ' + ${st}">Status</button>
+                            </form>
+                        </div>
+                        <div th:if="${#lists.isEmpty(validNextStatuses)}" class="text-muted small">
+                            No further status transitions permitted from current state.
+                        </div>
+                    </div>
+
+                    <!-- Agent Assignment (Staff Only) -->
+                    <div class="mb-0" th:if="${isStaff}">
+                        <hr>
+                        <label class="form-label small fw-semibold text-secondary">Assign Support Agent</label>
+                        <form th:action="@{'/tickets/' + ${ticket.id} + '/assign'}" method="post" class="d-flex gap-2">
+                            <select name="agentId" class="form-select form-select-sm" required>
+                                <option value="" disabled selected>Select agent</option>
+                                <option th:each="ag : ${orgAgents}" th:value="${ag.id}" th:text="${ag.fullName}">Agent Name</option>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-outline-success">Assign</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLA & Metadata Card -->
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-info-circle-fill text-primary me-1"></i>SLA Targets & Metadata</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item d-flex justify-content-between px-0">
+                            <span class="text-muted">Organization:</span>
+                            <strong th:text="${ticket.organizationName}">Acme Corp</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0">
+                            <span class="text-muted">Category:</span>
+                            <span th:text="${ticket.category}">TECHNICAL</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0">
+                            <span class="text-muted">Assigned Agent:</span>
+                            <span th:text="${ticket.assignedAgentName != null ? ticket.assignedAgentName : 'Unassigned'}">Agent</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0">
+                            <span class="text-muted">First Response Target:</span>
+                            <div>
+                                <span th:if="${ticket.firstResponseBreached}" class="badge bg-danger">BREACHED</span>
+                                <span th:unless="${ticket.firstResponseBreached}" th:text="${#temporals.format(ticket.firstResponseDeadline, 'dd-MMM HH:mm')}">Date</span>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0">
+                            <span class="text-muted">Resolution Target:</span>
+                            <div>
+                                <span th:if="${ticket.resolutionBreached}" class="badge bg-danger">BREACHED</span>
+                                <span th:unless="${ticket.resolutionBreached}" th:text="${#temporals.format(ticket.resolutionDeadline, 'dd-MMM HH:mm')}">Date</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Audit Status History Timeline -->
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-clock-history me-1"></i>Status History Timeline</h6>
+                </div>
+                <div class="card-body">
+                    <div th:if="${#lists.isEmpty(history)}" class="text-muted small">No history entries.</div>
+                    <div class="timeline-item small" th:each="h : ${history}">
+                        <div class="fw-bold" th:text="${h.fromStatus != null ? h.fromStatus + ' → ' + h.toStatus : 'Initialized as ' + h.toStatus}">Transition</div>
+                        <div class="text-muted" th:text="${h.reason}">Reason</div>
+                        <div class="text-secondary" style="font-size: 0.75rem;" th:text="${#temporals.format(h.createdAt, 'dd-MMM HH:mm:ss')}">Time</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/header :: scripts}"></div>
+
+</body>
+</html>

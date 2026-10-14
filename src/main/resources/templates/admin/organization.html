@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: html_head('Organization SLA & Policies')}"></head>
+<body>
+
+<nav th:replace="~{fragments/header :: navbar}"></nav>
+
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-sliders text-primary me-2"></i>Organization & SLA Configuration</h2>
+            <p class="text-muted small mb-0">Tenant-level SLA parameters and multi-tenant organization settings</p>
+        </div>
+        <a th:href="@{/dashboard}" class="btn btn-outline-secondary btn-sm">&larr; Dashboard</a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Current Tenant Organization Info -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-building me-2 text-primary"></i>Tenant Profile</h5>
+                </div>
+                <div class="card-body" th:if="${organization != null}">
+                    <h4 class="fw-bold text-dark" th:text="${organization.name}">Company Name</h4>
+                    <p class="text-muted small">Slug: <code th:text="${organization.slug}">slug</code></p>
+                    <p class="text-muted small">Support Contact: <span th:text="${organization.contactEmail}">email</span></p>
+                    <p class="text-muted small">Onboarded: <span th:text="${#temporals.format(organization.createdAt, 'dd-MMM-yyyy')}">Date</span></p>
+                </div>
+                <div class="card-body text-muted" th:unless="${organization != null}">
+                    Platform Super Admin (Global Scope)
+                </div>
+            </div>
+
+            <!-- Global Organizations List if Platform Admin -->
+            <div class="card shadow-sm border-0 rounded-4" th:if="${isPlatformAdmin}">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-globe me-2 text-primary"></i>All Platform Tenants</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center" th:each="org : ${allOrganizations}">
+                            <div>
+                                <strong th:text="${org.name}">Org Name</strong><br>
+                                <small class="text-muted font-monospace" th:text="${org.slug}">slug</small>
+                            </div>
+                            <span class="badge bg-primary">Active Tenant</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLA Policies Grid -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-stopwatch-fill me-2 text-warning"></i>Configured SLA Target Thresholds</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Priority</th>
+                                    <th>First Response Target</th>
+                                    <th>Resolution Target</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${#lists.isEmpty(slaPolicies)}">
+                                    <td colspan="4" class="text-center py-4 text-muted">Using default platform SLA targets.</td>
+                                </tr>
+                                <tr th:each="p : ${slaPolicies}">
+                                    <td>
+                                        <span class="badge" th:classappend="${'badge-' + p.priority.name().toLowerCase()}" th:text="${p.priority}">PRIORITY</span>
+                                    </td>
+                                    <td><strong th:text="${p.firstResponseHours + ' hours'}">1h</strong></td>
+                                    <td><strong th:text="${p.resolutionHours + ' hours'}">4h</strong></td>
+                                    <td><span class="badge bg-success">Active Policy</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/header :: scripts}"></div>
+
+</body>
+</html>

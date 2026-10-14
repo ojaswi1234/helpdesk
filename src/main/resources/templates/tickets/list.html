@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: html_head('Ticket Queue')}"></head>
+<body>
+
+<nav th:replace="~{fragments/header :: navbar}"></nav>
+
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-ticket-perforated text-primary me-2"></i>Tickets</h2>
+            <p class="text-muted small mb-0">Tenant-isolated support request queue with SLA targets</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a th:href="@{/tickets/create}" class="btn btn-primary btn-sm d-flex align-items-center gap-1" sec:authorize="hasRole('CUSTOMER')">
+                <i class="bi bi-plus"></i> New Ticket
+            </a>
+            <a th:href="@{/dashboard}" class="btn btn-outline-secondary btn-sm">&larr; Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card shadow-sm border-0 rounded-4 mb-4 p-3 bg-white">
+        <form th:action="@{/tickets}" method="get" class="row g-2 align-items-center">
+            <div class="col-auto">
+                <label class="form-label mb-0 fw-semibold small text-secondary">Filter by Status:</label>
+            </div>
+            <div class="col-auto">
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="" th:selected="${selectedStatus == null}">All Statuses</option>
+                    <option th:each="st : ${statuses}" th:value="${st}" th:text="${st}" th:selected="${st == selectedStatus}">OPEN</option>
+                </select>
+            </div>
+            <div class="col-auto" th:if="${selectedStatus != null}">
+                <a th:href="@{/tickets}" class="btn btn-outline-secondary btn-sm">Clear Filter</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tickets Table -->
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Number</th>
+                            <th>Title</th>
+                            <th>Priority</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Customer</th>
+                            <th>Assignee</th>
+                            <th>First Response Target</th>
+                            <th>Resolution Target</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${ticketPage.empty}">
+                            <td colspan="9" class="text-center py-4 text-muted">No tickets match the selected criteria.</td>
+                        </tr>
+                        <tr th:each="t : ${ticketPage.content}">
+                            <td>
+                                <a th:href="@{'/tickets/' + ${t.id}}" class="fw-bold text-decoration-none font-monospace" th:text="${t.ticketNumber}">HD-001</a>
+                            </td>
+                            <td>
+                                <a th:href="@{'/tickets/' + ${t.id}}" class="text-dark text-decoration-none fw-semibold" th:text="${t.title}">Title</a>
+                            </td>
+                            <td><span class="badge" th:classappend="${'badge-' + t.priority.toLowerCase()}" th:text="${t.priority}">PRIORITY</span></td>
+                            <td><span class="badge bg-light text-dark border" th:text="${t.category}">CATEGORY</span></td>
+                            <td><span class="badge" th:classappend="${'badge-' + t.status.toLowerCase()}" th:text="${t.status}">STATUS</span></td>
+                            <td class="small" th:text="${t.customerFullName}">Customer</td>
+                            <td class="small text-muted" th:text="${t.assignedAgentName != null ? t.assignedAgentName : 'Unassigned'}">Agent</td>
+                            <td class="small">
+                                <span th:if="${t.firstResponseBreached}" class="badge bg-danger">BREACHED</span>
+                                <span th:unless="${t.firstResponseBreached}" th:text="${#temporals.format(t.firstResponseDeadline, 'dd-MMM HH:mm')}">Time</span>
+                            </td>
+                            <td class="small">
+                                <span th:if="${t.resolutionBreached}" class="badge bg-danger">BREACHED</span>
+                                <span th:unless="${t.resolutionBreached}" th:text="${#temporals.format(t.resolutionDeadline, 'dd-MMM HH:mm')}">Time</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="d-flex justify-content-between align-items-center" th:if="${totalPages > 1}">
+        <span class="small text-muted">Page <span th:text="${currentPage + 1}">1</span> of <span th:text="${totalPages}">1</span></span>
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/tickets(page=${currentPage - 1}, status=${selectedStatus})}">Previous</a>
+            </li>
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                th:classappend="${currentPage == i} ? 'active'">
+                <a class="page-link" th:href="@{/tickets(page=${i}, status=${selectedStatus})}" th:text="${i + 1}">1</a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+                <a class="page-link" th:href="@{/tickets(page=${currentPage + 1}, status=${selectedStatus})}">Next</a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div th:replace="~{fragments/header :: scripts}"></div>
+
+</body>
+</html>
