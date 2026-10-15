@@ -12,13 +12,14 @@ WORKDIR /app
 
 RUN addgroup -S helpdeskgroup && adduser -S helpdesk -G helpdeskgroup
 RUN mkdir -p /app/uploads/attachments && chown -R helpdesk:helpdeskgroup /app/uploads
-USER helpdesk:helpdeskgroup
 
-COPY --from=builder /app/target/helpdesk-pro-1.0.0.jar app.jar
+COPY --from=builder --chown=helpdesk:helpdeskgroup /app/target/helpdesk-pro-app.jar app.jar
+
+USER helpdesk:helpdeskgroup
 
 EXPOSE 8081
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1
 
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
