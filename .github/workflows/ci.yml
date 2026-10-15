@@ -40,6 +40,7 @@ jobs:
 
       - name: Compile and Run Automated Verification
         env:
+          SPRING_PROFILES_ACTIVE: postgres
           DB_URL: jdbc:postgresql://localhost:5432/helpdesk_db
           DB_USERNAME: helpdesk_user
           DB_PASSWORD: helpdesk_pass

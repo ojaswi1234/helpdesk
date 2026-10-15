@@ -28,6 +28,7 @@ services:
       helpdesk-db:
         condition: service_healthy
     environment:
+      SPRING_PROFILES_ACTIVE: postgres
       DB_URL: jdbc:postgresql://helpdesk-db:5432/${DB_NAME:-helpdesk_db}
       DB_USERNAME: ${DB_USERNAME:-helpdesk_user}
       DB_PASSWORD: ${DB_PASSWORD:-helpdesk_pass}
