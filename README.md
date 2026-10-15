@@ -4,6 +4,15 @@ HelpDesk Pro is an enterprise customer support platform built with **Java 21 LTS
 
 ---
 
+## Application Preview
+
+### 🎧 Support Operations & Tenant Management Platform (`ROLE_PLATFORM_ADMIN` / `ROLE_AGENT`)
+Centralized support operations cockpit featuring tenant isolation boundaries, real-time SLA deadline monitoring, open queue metrics, and live WebSocket STOMP updates.
+
+![HelpDesk Pro Support Operations Dashboard](docs/screenshots/helpdesk_superadmin_dashboard.png)
+
+---
+
 ## 1. Problem Statement
 In multi-tenant SaaS environments, security and data isolation are critical:
 - Inadequate server-side authorization can cause catastrophic cross-tenant data leaks where Tenant A reads Tenant B's confidential tickets or customer data.
